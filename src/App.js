@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import data from "./data/articles.json";
+import AdminPanel from './AdminPanel';
 
 function Header({ currentPath, onBack, showBack }) {
   return (
@@ -24,7 +25,7 @@ function Header({ currentPath, onBack, showBack }) {
   );
 }
 
-function MainMenu({ categories, onSelectCategory }) {
+function MainMenu({ categories, onSelectCategory, onOpenAdmin }) {
   return (
     <div className="p-4">
       <div className="text-center mb-6">
@@ -43,6 +44,15 @@ function MainMenu({ categories, onSelectCategory }) {
           </button>
         ))}
       </div>
+
+      {/* Кнопка админки */}
+      <button
+        onClick={onOpenAdmin}
+        className="fixed bottom-6 right-6 bg-green-500 text-white w-12 h-12 rounded-full shadow-lg hover:bg-green-600 transition-colors z-40 flex items-center justify-center"
+        title="Добавить статью"
+      >
+        <span className="text-2xl">+</span>
+      </button>
     </div>
   );
 }
@@ -155,6 +165,7 @@ function App() {
   const [currentSubcategory, setCurrentSubcategory] = useState(null);
   const [currentArticle, setCurrentArticle] = useState(null);
   const [path, setPath] = useState([]);
+  const [showAdmin, setShowAdmin] = useState(false);
 
   // Используем useCallback чтобы избежать предупреждения
   const handleBack = useCallback(() => {
@@ -197,6 +208,17 @@ function App() {
     setCurrentView('article');
   };
 
+  const handleSaveArticle = (category, subcategory, newArticle) => {
+    // Показываем статью сразу в интерфейсе
+    setCurrentCategory({ key: category, data: data[category] });
+    setCurrentSubcategory({ key: subcategory, data: [newArticle] });
+    setCurrentArticle(newArticle);
+    setCurrentView('article');
+    setPath([category, subcategory, newArticle.title]);
+    
+    alert('Статья добавлена! Вы перейдете к ее просмотру.');
+  };
+
   const showBackButton = currentView !== 'main';
 
   // Telegram Web App integration
@@ -214,7 +236,7 @@ function App() {
         tg.BackButton.hide();
       }
     }
-  }, [currentView, handleBack]); // Теперь handleBack в зависимостях
+  }, [currentView, handleBack]);
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
@@ -229,6 +251,7 @@ function App() {
           <MainMenu 
             categories={data} 
             onSelectCategory={handleSelectCategory}
+            onOpenAdmin={() => setShowAdmin(true)}
           />
         )}
         
@@ -257,6 +280,14 @@ function App() {
           />
         )}
       </main>
+
+      {/* Админ-панель */}
+      {showAdmin && (
+        <AdminPanel 
+          onClose={() => setShowAdmin(false)}
+          onSave={handleSaveArticle}
+        />
+      )}
     </div>
   );
 }
